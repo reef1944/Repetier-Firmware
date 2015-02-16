@@ -940,6 +940,61 @@ uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long delta
 }
 #endif
 
+#if DRIVE_SYSTEM == 6
+
+/*********************************
+Calculate the angles necessary to attain a given cartesian position
+
+Returns -1 if the position is impossible.
+
+*********************************/
+
+uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long deltaPosSteps[])
+{
+	float theta1, theta2, theta3;
+	int success;
+	//calculate the angle you want first
+	success =  delta_calcInverse ((float) cartesianPosSteps[X_AXIS], (float) cartesianPosSteps[Y_AXIS], (float) cartesianPosSteps[Z_AXIS],
+							theta1, theta2, theta3));
+	if (success != -1) {
+		deltaPosSteps[X_AXIS] = long (theta1 * XDEGREES_PER_STEP ); /* convert angles to steps */
+		deltaPosSteps[Y_AXIS] = long (theta2 * YDEGREES_PER_STEP ); /* convert angles to steps */ 
+		deltaPosSteps[Z_AXIS] = long (theta3 * XDEGREES_PER_STEP ); /* convert angles to steps */ 
+	}
+	return success;
+}
+ // inverse kinematics
+ // helper functions, calculates angle theta1 (for YZ-pane)
+ int delta_calcAngleYZ(float x0, float y0, float z0, float &theta) {
+     float y1 = -0.5 * 0.57735 * f; // f/2 * tg 30
+     y0 -= 0.5 * 0.57735    * e;    // shift center to edge
+     // z = a + b*y
+     float a = (x0*x0 + y0*y0 + z0*z0 +rf*rf - re*re - y1*y1)/(2*z0);
+     float b = (y1-y0)/z0;
+     // discriminant
+     float d = -(a+b*y1)*(a+b*y1)+rf*(b*b*rf+rf); 
+     if (d < 0) return -1; // non-existing point
+     float yj = (y1 - a*b - sqrt(d))/(b*b + 1); // choosing outer point
+     float zj = a + b*yj;
+     theta = 180.0*atan(-zj/(y1 - yj))/pi + ((yj>y1)?180.0:0.0);
+     return 0;
+ }
+ 
+ // inverse kinematics: (x0, y0, z0) -> (theta1, theta2, theta3)
+ // returned status: 0=OK, -1=non-existing position
+ int delta_calcInverse(float x0, float y0, float z0, float &theta1, float &theta2, float &theta3) {
+     theta1 = theta2 = theta3 = 0;
+     int status = delta_calcAngleYZ(x0, y0, z0, theta1);
+     if (status == 0) status = delta_calcAngleYZ(x0*cos120 + y0*sin120, y0*cos120-x0*sin120, z0, theta2);  // rotate coords to +120 deg
+     if (status == 0) status = delta_calcAngleYZ(x0*cos120 - y0*sin120, y0*cos120+x0*sin120, z0, theta3);  // rotate coords to -120 deg
+     return status;
+ }
+
+
+}
+
+#endif
+
 #if DRIVE_SYSTEM==4
 
 /**

@@ -117,7 +117,7 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
     // *** These parameter are only for Delta printers ***
     // ***************************************************
 
-/** \brief Delta drive type: 0 - belts and pulleys, 1 - filament drive */
+/** \brief Delta drive type: 0 - belts and pulleys, 1 - filament drive, 2 - FirePick Delta (original Delta configuration) */
 #define DELTA_DRIVE_TYPE 0
 
 #if DELTA_DRIVE_TYPE == 0
@@ -130,6 +130,13 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 /** \brief Filament pulley diameter in milimeters */
 #define PULLEY_DIAMETER 10
 #define PULLEY_CIRCUMFERENCE (PULLEY_DIAMETER * 3.1415927)
+#elif DELTA_DRIVE_TYPE == 2
+/** \brief Fire Pick Delta configuration */
+#define BELT_PITCH 2
+#define PULLY_TEETH 20
+#define PULLY_CIRCUMFRENCE (PULLEY_TEETH)
+#define LARGE_PULLY_CIRCUMFRENCE 150
+
 #endif
 
 /** \brief Steps per rotation of stepper motor */
@@ -139,10 +146,22 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 #define MICRO_STEPS 16
 
 // Calculations
+#if DELTA_DRIVE_TYPE != 2
+
 #define AXIS_STEPS_PER_MM ((float)(MICRO_STEPS * STEPS_PER_ROTATION) / PULLEY_CIRCUMFERENCE)
 #define XAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
 #define YAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
 #define ZAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
+
+#else
+
+#define DEGREES_PER_STEP ((float)(MICRO_STEPS * STEPS_PER_ROTATION * PULLEY_CIRCUMFERENCE) / LARGE_PULLY_CIRCUMFRENCE / 360.0)
+#define XDEGREES_PER_STEP DEGREES_PER_STEP
+#define YDEGREES_PER_STEP DEGREES_PER_STEP
+#define ZDEGREES_PER_STEP DEGREES_PER_STEP
+
+#endif
+
 #else
 // *******************************************************
 // *** These parameter are for all other printer types ***
