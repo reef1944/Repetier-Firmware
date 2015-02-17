@@ -957,9 +957,9 @@ uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long delta
 	success =  delta_calcInverse ((float) cartesianPosSteps[X_AXIS], (float) cartesianPosSteps[Y_AXIS], (float) cartesianPosSteps[Z_AXIS],
 							theta1, theta2, theta3));
 	if (success != -1) {
-		deltaPosSteps[X_AXIS] = long (theta1 * XDEGREES_PER_STEP ); /* convert angles to steps */
-		deltaPosSteps[Y_AXIS] = long (theta2 * YDEGREES_PER_STEP ); /* convert angles to steps */ 
-		deltaPosSteps[Z_AXIS] = long (theta3 * XDEGREES_PER_STEP ); /* convert angles to steps */ 
+		deltaPosSteps[X_AXIS] = long (theta1 * XSTEPS_PER_DEGREE ); /* convert angles to steps */
+		deltaPosSteps[Y_AXIS] = long (theta2 * YSTEPS_PER_DEGREE ); /* convert angles to steps */ 
+		deltaPosSteps[Z_AXIS] = long (theta3 * ZSTEPS_PER_DEGREE ); /* convert angles to steps */ 
 	}
 	return success;
 }
