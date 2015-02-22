@@ -78,9 +78,26 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0
 // PiBot for Repetier V1.4    = 315
 // Sanguish Beta              = 501
 // Unique One rev. A          = 88
+// FirePick Delta (AtMega1284p) = 639
 // User layout defined in userpins.h = 999
 
-#define MOTHERBOARD 33
+
+#define MOTHERBOARD 639
+
+//Which StepStick are you using?
+#define DRV8825
+//#define A4988
+
+#ifdef DRV8825
+  #ifdef A4988
+    #error "Please define only one motor driver, either DRV8825 or A4988"
+  #endif
+#endif
+
+//What Stepper motor are you using?
+/** \brief Steps per rotation of stepper motor */
+//#define STEPS_PER_ROTATION 200 //1.8 degree
+#define STEPS_PER_ROTATION 400 //0.9 degree
 
 #include "pins.h"
 
@@ -104,7 +121,7 @@ is a full cartesian system where x, y and z moves are handled by separate motors
 Cases 1 and 2 cover all needed xy H gantry systems. If you get results mirrored etc. you can swap motor connections for x and y.
 If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 */
-#define DRIVE_SYSTEM 0
+#define DRIVE_SYSTEM 6
 
 // ##########################################################################################
 // ##                               Calibration                                            ##
@@ -112,13 +129,13 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 
 /** Drive settings for the Delta printers
 */
-#if DRIVE_SYSTEM==3
+#if DRIVE_SYSTEM==6
     // ***************************************************
     // *** These parameter are only for Delta printers ***
     // ***************************************************
 
-/** \brief Delta drive type: 0 - belts and pulleys, 1 - filament drive */
-#define DELTA_DRIVE_TYPE 0
+/** \brief Delta drive type: 0 - belts and pulleys, 1 - filament drive, 2 - FirePick Delta (original Delta configuration) */
+#define DELTA_DRIVE_TYPE 2
 
 #if DELTA_DRIVE_TYPE == 0
 /** \brief Pitch in mm of drive belt. GT2 = 2mm */
@@ -130,19 +147,81 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 /** \brief Filament pulley diameter in milimeters */
 #define PULLEY_DIAMETER 10
 #define PULLEY_CIRCUMFERENCE (PULLEY_DIAMETER * 3.1415927)
+#elif DELTA_DRIVE_TYPE == 2
+/** \brief Fire Pick Delta configuration */
+
+#define BELT_PITCH 2
+#define PULLEY_TEETH 16
+#define PULLEY_CIRCUMFRENCE PULLEY_TEETH
+#define LARGE_PULLEY_CIRCUMFRENCE 150
+
+
+// Make delta curves from many straight lines (linear interpolation).
+// This is a trade-off between visible corners (not enough segments)
+// and processor overload (too many expensive sqrt calls).
+#define DELTA_SEGMENTS_PER_SECOND 50
+
+#define DELTA_E         131.636 // End effector length
+#define DELTA_F         190.526 // Base length
+#define DELTA_RE        270.000 // Carbon rod length
+#define DELTA_RF         90.000 // Servo horn length
+//#define DELTA_Z_OFFSET  293.000 // Distance from delta 8mm rod/pulley to table/bed.
+
+//NOTE: For OpenPnP, set the zero to be about 25mm above the bed...
+#define DELTA_Z_OFFSET  268.000 // Distance from delta 8mm rod/pulley to table/bed.
+
+
+#define DELTA_EE_OFFS    15.000 // Ball joint plane to bottom of end effector surface
+//#define TOOL_OFFSET       0.000 // No offset
+//#define TOOL_OFFSET      40.000 // Distance between end effector ball joint plane and tip of tool (Z probe)
+#define TOOL_OFFSET      30.500 // Distance between end effector ball joint plane and tip of tool (PnP)
+#define Z_CALC_OFFSET  ((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) * -1.0)
+
+#define Z_HOME_ANGLE    -67.200 // This is the angle where the arms hit the endstop sensor
+#define Z_HOME_OFFS    (((DELTA_Z_OFFSET - TOOL_OFFSET - DELTA_EE_OFFS) - 182.002) - 0.5)
+                                // This is calculated from the above angle, after applying forward 
+                                // kinematics, and adding the Z calc offset to it.
+
+
+// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+#define DELTA_PRINTABLE_RADIUS 150.0
+
+
+
+
 #endif
 
-/** \brief Steps per rotation of stepper motor */
-#define STEPS_PER_ROTATION 200
+/** \brief Micro stepping rate of X, Y and Y delta or tower stepper drivers */
 
-/** \brief Micro stepping rate of X, Y and Y tower stepper drivers */
-#define MICRO_STEPS 16
+#if defined ( DRV8825 ) 
+#define MICRO_STEPS 32 // [1,2,4,8,16,32] NOTE: EMC01 hardwires to 32
+#elif defined ( A4988 )
+#define MICRO_STEPS 16 // [1,2,4,8,16] NOTE: EMC01 hardwires to 16
+#elif MOTHERBOARD == 301 //Rambo Board
+#define MICRO_STEPS 8 // [1,2,4,8,16] RAMBO Board
+#else
+#error "Please define a Stepper Motor Driver either A4988 or DRV8825"
+#endif
 
 // Calculations
-#define AXIS_STEPS_PER_MM ((float)(MICRO_STEPS * STEPS_PER_ROTATION) / PULLEY_CIRCUMFERENCE)
+//#if DELTA_DRIVE_TYPE != 2
+
+#define AXIS_STEPS_PER_MM ((float)(MICRO_STEPS * STEPS_PER_ROTATION) / PULLEY_CIRCUMFRENCE)
 #define XAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
 #define YAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
 #define ZAXIS_STEPS_PER_MM AXIS_STEPS_PER_MM
+
+//#else
+
+/** \brief Steps per degree is 83.333 using the above values */
+
+#define STEPS_PER_DEGREE ((float)(MICRO_STEPS * STEPS_PER_ROTATION * PULLEY_CIRCUMFRENCE) / LARGE_PULLEY_CIRCUMFRENCE / 360.0)
+#define XSTEPS_PER_DEGREE STEPS_PER_DEGREE
+#define YSTEPS_PER_DEGREE STEPS_PER_DEGREE
+#define ZSTEPS_PER_DEGREE STEPS_PER_DEGREE
+
+//#endif
+
 #else
 // *******************************************************
 // *** These parameter are for all other printer types ***
@@ -158,7 +237,7 @@ For xy gantry use 2*belt moved!
 Overridden if EEPROM activated.*/
 #define YAXIS_STEPS_PER_MM 98.425196
 /** \brief Number of steps for a 1mm move in z direction  Overridden if EEPROM activated.*/
-#define ZAXIS_STEPS_PER_MM 2560
+#define ZAXIS_STEPS_PER_MM 2560.0
 #endif
 
 // ##########################################################################################
@@ -600,26 +679,26 @@ on this endstop.
 #define ENDSTOP_PULLUP_X_MIN false
 #define ENDSTOP_PULLUP_Y_MIN false
 #define ENDSTOP_PULLUP_Z_MIN false
-#define ENDSTOP_PULLUP_X_MAX true
-#define ENDSTOP_PULLUP_Y_MAX true
+#define ENDSTOP_PULLUP_X_MAX false
+#define ENDSTOP_PULLUP_Y_MAX false
 #define ENDSTOP_PULLUP_Z_MAX false
 
 //set to true to invert the logic of the endstops
-#define ENDSTOP_X_MIN_INVERTING true
-#define ENDSTOP_Y_MIN_INVERTING true
-#define ENDSTOP_Z_MIN_INVERTING true
+#define ENDSTOP_X_MIN_INVERTING false
+#define ENDSTOP_Y_MIN_INVERTING false
+#define ENDSTOP_Z_MIN_INVERTING false
 #define ENDSTOP_X_MAX_INVERTING false
 #define ENDSTOP_Y_MAX_INVERTING false
-#define ENDSTOP_Z_MAX_INVERTING true
+#define ENDSTOP_Z_MAX_INVERTING false
 
 // Set the values true where you have a hardware endstop. The Pin number is taken from pins.h.
 
 #define MIN_HARDWARE_ENDSTOP_X true
 #define MIN_HARDWARE_ENDSTOP_Y true
-#define MIN_HARDWARE_ENDSTOP_Z false
+#define MIN_HARDWARE_ENDSTOP_Z true
 #define MAX_HARDWARE_ENDSTOP_X false
 #define MAX_HARDWARE_ENDSTOP_Y false
-#define MAX_HARDWARE_ENDSTOP_Z true
+#define MAX_HARDWARE_ENDSTOP_Z false
 
 //If your axes are only moving in one direction, make sure the endstops are connected properly.
 //If your axes move in one direction ONLY when the endstops are triggered, set ENDSTOPS_INVERTING to true here
@@ -648,7 +727,7 @@ on this endstop.
 // Sets direction of endstops when homing; 1=MAX, -1=MIN
 #define X_HOME_DIR -1
 #define Y_HOME_DIR -1
-#define Z_HOME_DIR 1
+#define Z_HOME_DIR -1
 
 // Delta robot radius endstop
 #define max_software_endstop_r true
@@ -704,7 +783,11 @@ on this endstop.
 // ##########################################################################################
 
 // Microstep setting (Only functional when stepper driver microstep pins are connected to MCU. Currently only works for RAMBO boards
-#define MICROSTEP_MODES {8,8,8,8,8} // [1,2,4,8,16]
+#if defined ( DRV8825 ) || defined ( A4988 ) || MOTHERBOARD == 301 
+#define MICROSTEP_MODES {MICRO_STEP,MICRO_STEP,MICRO_STEP,MICRO_STEP,MICRO_STEP} 
+#else
+#error "Please define a Stepper Motor Driver either A4988 or DRV8825"
+#endif
 
 // Motor Current setting (Only functional when motor driver current ref pins are connected to a digital trimpot on supported boards)
 #if MOTHERBOARD==301
@@ -827,14 +910,14 @@ Mega. Used only for nonlinear systems like delta or tuga. */
     The axis order in all axis related arrays is X, Y, Z
      Overridden if EEPROM activated.
     */
-#define MAX_FEEDRATE_X 200
-#define MAX_FEEDRATE_Y 200
-#define MAX_FEEDRATE_Z 5
+#define MAX_FEEDRATE_X 800
+#define MAX_FEEDRATE_Y 800
+#define MAX_FEEDRATE_Z 800
 
 /** Home position speed in mm/s. Overridden if EEPROM activated. */
-#define HOMING_FEEDRATE_X 80
-#define HOMING_FEEDRATE_Y 80
-#define HOMING_FEEDRATE_Z 3
+#define HOMING_FEEDRATE_X 800
+#define HOMING_FEEDRATE_Y 800
+#define HOMING_FEEDRATE_Z 800
 
 /** Set order of axis homing. Use HOME_ORDER_XYZ and replace XYZ with your order. */
 #define HOMING_ORDER HOME_ORDER_ZXY
@@ -861,7 +944,8 @@ This is like reducing your 1/16th microstepping to 1/8 or 1/4. It is much cheape
 additional stepper interrupts with all it's overhead. As a result you can go as high as
 40000Hz.
 */
-#define STEP_DOUBLER_FREQUENCY 12000
+//#define STEP_DOUBLER_FREQUENCY 12000
+#define STEP_DOUBLER_FREQUENCY 16000
 /** If you need frequencies off more then 30000 you definitely need to enable this. If you have only 1/8 stepping
 enabling this may cause to stall your moves when 20000Hz is reached.
 */
@@ -1041,7 +1125,7 @@ matches, the stored values are used to overwrite the settings.
 IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, as they are
            taken from the EEPROM.
 */
-#define EEPROM_MODE 1
+#define EEPROM_MODE 0
 
 
 /**************** duplicate motor driver ***************
@@ -1203,8 +1287,8 @@ Select the language to use.
 #define UI_LANGUAGE 1
 
 // This is line 2 of the status display at startup. Change to your like.
-#define UI_PRINTER_NAME "Ordbot"
-#define UI_PRINTER_COMPANY "RepRapDiscount"
+#define UI_PRINTER_NAME "FirePick - EMC01"
+#define UI_PRINTER_COMPANY "FirePick Delta"
 
 
 /** Animate switches between menus etc. */

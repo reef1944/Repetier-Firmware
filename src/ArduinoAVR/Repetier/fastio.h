@@ -413,7 +413,7 @@ pins
 
 // SPI
 #define	SCK					7
-#define	MISO				DIO6
+#define	MISO				6
 #define	MOSI				DIO5
 #define	SS					4
 

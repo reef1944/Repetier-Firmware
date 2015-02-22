@@ -143,6 +143,10 @@ FSTRINGVALUE(Com::tInvalidDeltaCoordinate,"Invalid coordinate - move ignored")
 FSTRINGVALUE(Com::tDBGDeltaNoMoveinDSegment,"No move in delta segment with > 1 segment. This should never happen and may cause a problem!")
 FSTRINGVALUE(Com::tEPRDiagonalRodLength,"Long arm length [mm]")
 #endif // DRIVE_SYSTEM
+#if DRIVE_SYSTEM==6
+FSTRINGVALUE(Com::tInvalidDeltaCoordinate,"Invalid coordinate - move ignored")
+FSTRINGVALUE(Com::tDBGDeltaNoMoveinDSegment,"No move in delta segment with > 1 segment. This should never happen and may cause a problem!")
+#endif // DRIVE_SYSTEM
 #ifdef DEBUG_GENERIC
 FSTRINGVALUE(Com::tGenTemp,"GenTemp:")
 #endif // DEBUG_GENERICFSTRINGVALUE(Com::,"")

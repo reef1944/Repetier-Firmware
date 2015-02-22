@@ -387,6 +387,11 @@ void microstepMode(uint8_t driver, uint8_t stepping_mode)
     case 16:
         microstepMS(driver,MICROSTEP16);
         break;
+#ifdef DRV8825
+    case 32:
+        microstepMS(driver,MICROSTEP32);
+        break;
+#endif
     }
 }
 void microstepReadings()

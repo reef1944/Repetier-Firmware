@@ -2172,6 +2172,100 @@ S3(ext)=9
 #define E1_PINS
 #endif
 
+/****************************************************************************************
+* A FirePick Delta EMC01 pin assignment (custom PCB based on ATMega1284P)
+*
+****************************************************************************************/
+#if MOTHERBOARD == 639
+
+#define EMC_V_0_1
+#define KNOWN_BOARD 1
+
+//////////////////FIX THIS//////////////
+#ifndef __AVR_ATmega1284P__
+#ifndef __AVR_ATmega1284__
+#error Oops!  Make sure you have 'ATMega1284 (full 20MHz, boot, BOD 4v3)' selected from the 'Tools -> Boards' menu.
+#endif
+#endif
+
+//****************************************************************************************
+// FirePick Delta EMC01 pin assignment (custom PCB based on ATMega1284P)
+//****************************************************************************************
+  
+  #define LARGE_FLASH true
+  
+  //Delta Motor "X" ***********
+  #define ORIG_X_STEP_PIN         23 //X is the BACK motor!
+  #define ORIG_X_DIR_PIN          22
+  #define ORIG_X_ENABLE_PIN       14
+  #define ORIG_X_MIN_PIN          21
+  #define ORIG_X_MAX_PIN          -1
+  
+  //Delta Motor "Y" ***********
+  #define ORIG_Y_STEP_PIN         4 //Y is the FRONT LEFT motor!
+  #define ORIG_Y_DIR_PIN          3
+  #define ORIG_Y_ENABLE_PIN       14
+  #define ORIG_Y_MIN_PIN          2
+  #define ORIG_Y_MAX_PIN          -1
+  
+  //Delta Motor "Z" ***********
+  #define ORIG_Z_STEP_PIN         13 //Z is the FRONT RIGHT motor!
+  #define ORIG_Z_DIR_PIN          12
+  #define ORIG_Z_ENABLE_PIN       14
+  #define ORIG_Z_MIN_PIN          11
+  #define ORIG_Z_MAX_PIN          -1
+  
+  //Modular Tool #1 ***********
+  #define ORIG_E0_STEP_PIN        20
+  #define ORIG_E0_DIR_PIN         15
+  #define ORIG_E0_ENABLE_PIN      1
+  #define VACUUM_PIN         30 // Modular Tool #1 for now...
+  
+  //Modular Tool #2 ***********
+  #define ORIG_E1_STEP_PIN        20
+  #define ORIG_E1_DIR_PIN         15
+  #define ORIG_E1_ENABLE_PIN      0
+  #define HEATER_0_PIN       28 //Digital numbering
+  #define TEMP_0_PIN         A2 //Analog numbering
+  
+  //Modular Tool #3 ***********
+  #define ORIG_E2_STEP_PIN        20
+  #define ORIG_E2_DIR_PIN         15
+  #define ORIG_E2_ENABLE_PIN      19
+  #define HEATER_1_PIN       27 //Digital numbering
+  #define TEMP_1_PIN         A5 //Analog numbering
+
+  //Modular Tool #4 ***********
+  #define ORIG_E3_STEP_PIN        20
+  #define ORIG_E3_DIR_PIN         15
+  #define ORIG_E3_ENABLE_PIN      18
+  #define HEATER_2_PIN       25
+  #define TEMP_2_PIN         A7 //Analog numbering
+
+  #define HEATER_BED_PIN     -1 //25 //Digital numbering
+  #define TEMP_BED_PIN       -1 //A7 //Analog numbering
+
+  //Vestigial Leftovers *******
+  #define LED_PIN            -1 //Not used on EMC01
+  #define ORIG_FAN_PIN            -1 //Not used on EMC01
+  #define PS_ON_PIN          -1 //Not currently used, but might be on next pcb rev...
+
+#ifndef SDSUPPORT
+// these pins are defined in the SD library if building with SD support
+#define SDSS                 -1
+#define SCK_PIN          7
+#define MISO_PIN         6
+#define MOSI_PIN         5
+//#define MAX6675_SS           -1  //53
+//#define STEPPER_CURRENT_CONTROL CURRENT_CONTROL_DIGIPOT
+#endif
+
+#define E0_PINS ORIG_E0_STEP_PIN,ORIG_E0_DIR_PIN,ORIG_E0_ENABLE_PIN,
+#define E1_PINS ORIG_E1_STEP_PIN,ORIG_E1_DIR_PIN,ORIG_E1_ENABLE_PIN,
+#define E2_PINS ORIG_E2_STEP_PIN,ORIG_E2_DIR_PIN,ORIG_E2_ENABLE_PIN,
+#define E3_PINS ORIG_E3_STEP_PIN,ORIG_E3_DIR_PIN,ORIG_E3_ENABLE_PIN,
+
+#endif  //EMC01 pinout
 
 #if MOTHERBOARD == 999
 #define KNOWN_BOARD
@@ -2258,6 +2352,15 @@ S3(ext)=9
 #define SENSITIVE_PINS {0, 1, ORIG_X_STEP_PIN, ORIG_X_DIR_PIN, ORIG_X_ENABLE_PIN, ORIG_X_MIN_PIN, ORIG_X_MAX_PIN, \
         ORIG_Y_STEP_PIN, ORIG_Y_DIR_PIN, ORIG_Y_ENABLE_PIN, ORIG_Y_MIN_PIN, ORIG_Y_MAX_PIN, ORIG_Z_STEP_PIN,\
         ORIG_Z_DIR_PIN, ORIG_Z_ENABLE_PIN, ORIG_Z_MIN_PIN, ORIG_Z_MAX_PIN, LED_PIN, PS_ON_PIN, \
-        HEATER_0_PIN, HEATER_1_PIN, ORIG_FAN_PIN, E0_PINS E1_PINS E2_PINS TEMP_0_PIN, TEMP_1_PIN,SDSS }
+        HEATER_0_PIN, HEATER_1_PIN, ORIG_FAN_PIN, E0_PINS E1_PINS E2_PINS E3_PINS TEMP_0_PIN, TEMP_1_PIN,SDSS, \
+        analogInputToDigitalPin(TEMP_0_PIN), analogInputToDigitalPin(TEMP_1_PIN), analogInputToDigitalPin(TEMP_2_PIN), analogInputToDigitalPin(TEMP_BED_PIN) }
+
+//#define SENSITIVE_PINS {0, 1, X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, PS_ON_PIN, \
+//                        HEATER_BED_PIN, FAN_PIN,                  \
+//                        _E0_PINS _E1_PINS _E2_PINS             \
+//                        analogInputToDigitalPin(TEMP_0_PIN), analogInputToDigitalPin(TEMP_1_PIN), analogInputToDigitalPin(TEMP_2_PIN), analogInputToDigitalPin(TEMP_BED_PIN) }
+
 #endif
+
+
 
