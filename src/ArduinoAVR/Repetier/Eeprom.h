@@ -250,6 +250,9 @@ public:
         return DELTA_SEGMENTS_PER_SECOND_MOVE;
 #endif
     }
+    
+    #if DRIVE_SYSTEM!=6      
+    #error "BIG NOSE" DRIVE_SYSTEM
     static inline float deltaDiagonalRodLength() {
 #if EEPROM_MODE!=0
         return HAL::eprGetFloat(EPR_DELTA_DIAGONAL_ROD_LENGTH);
@@ -257,6 +260,7 @@ public:
         return DELTA_DIAGONAL_ROD;
 #endif
     }
+    #endif
     static inline int16_t deltaSegmentsPerSecondPrint() {
 #if EEPROM_MODE!=0
         return HAL::eprGetInt16(EPR_DELTA_SEGMENTS_PER_SECOND_PRINT);

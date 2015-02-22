@@ -103,6 +103,9 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #define MICROSTEP4 LOW,HIGH
 #define MICROSTEP8 HIGH,HIGH
 #define MICROSTEP16 HIGH,HIGH
+#ifdef DRV8825
+#define MICROSTEP32 HIGH,HIGH
+#endif
 
 #define HOME_ORDER_XYZ 1
 #define HOME_ORDER_XZY 2

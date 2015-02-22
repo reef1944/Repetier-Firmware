@@ -90,6 +90,19 @@ uint8_t PrintLine::linesWritePos = 0;            ///< Position where we write th
 volatile uint8_t PrintLine::linesCount = 0;      ///< Number of lines cached 0 = nothing to do.
 uint8_t PrintLine::linesPos = 0;                 ///< Position for executing line movement.
 
+#if DRIVE_SYSTEM == 6
+  //const float sqrt3 = 1.7320508075688772935274463415059;  // sqrt(3.0)
+  const float pi     = 3.14159265358979323846;    // PI
+  const float sin120 = 0.86602540378443864676372317075294; //sqrt3/2.0
+  const float cos120 = -0.5;        
+  const float tan60  = 1.7320508075688772935274463415059; //sqrt3;
+  const float sin30  = 0.5;
+  const float tan30  = 0.57735026918962576450914878050196; //1/sqrt3
+  float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
+
+float delta[3] = {0.0, 0.0, 0.0};
+#endif
+
 /**
 Move printer the given number of steps. Puts the move into the queue. Used by e.g. homing commands.
 */
@@ -949,30 +962,16 @@ Returns -1 if the position is impossible.
 
 *********************************/
 
-uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long deltaPosSteps[])
-{
-	float theta1, theta2, theta3;
-	int success;
-	//calculate the angle you want first
-	success =  delta_calcInverse ((float) cartesianPosSteps[X_AXIS], (float) cartesianPosSteps[Y_AXIS], (float) cartesianPosSteps[Z_AXIS],
-							theta1, theta2, theta3));
-	if (success != -1) {
-		deltaPosSteps[X_AXIS] = long (theta1 * XSTEPS_PER_DEGREE ); /* convert angles to steps */
-		deltaPosSteps[Y_AXIS] = long (theta2 * YSTEPS_PER_DEGREE ); /* convert angles to steps */ 
-		deltaPosSteps[Z_AXIS] = long (theta3 * ZSTEPS_PER_DEGREE ); /* convert angles to steps */ 
-	}
-	return success;
-}
  // inverse kinematics
  // helper functions, calculates angle theta1 (for YZ-pane)
  int delta_calcAngleYZ(float x0, float y0, float z0, float &theta) {
-     float y1 = -0.5 * 0.57735 * f; // f/2 * tg 30
-     y0 -= 0.5 * 0.57735    * e;    // shift center to edge
+     float y1 = -0.5 * 0.57735 * DELTA_F; // f/2 * tg 30
+     y0 -= 0.5 * 0.57735    * DELTA_E;    // shift center to edge
      // z = a + b*y
-     float a = (x0*x0 + y0*y0 + z0*z0 +rf*rf - re*re - y1*y1)/(2*z0);
+     float a = (x0*x0 + y0*y0 + z0*z0 +DELTA_RF*DELTA_RF - DELTA_RE*DELTA_RE - y1*y1)/(2*z0);
      float b = (y1-y0)/z0;
      // discriminant
-     float d = -(a+b*y1)*(a+b*y1)+rf*(b*b*rf+rf); 
+     float d = -(a+b*y1)*(a+b*y1)+DELTA_RF*(b*b*DELTA_RF+DELTA_RF); 
      if (d < 0) return -1; // non-existing point
      float yj = (y1 - a*b - sqrt(d))/(b*b + 1); // choosing outer point
      float zj = a + b*yj;
@@ -990,7 +989,19 @@ uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long delta
      return status;
  }
 
-
+uint8_t transformCartesianStepsToDeltaSteps(long cartesianPosSteps[], long deltaPosSteps[])
+{
+	float theta1, theta2, theta3;
+	int success;
+	//calculate the angle you want first
+	success =  delta_calcInverse ((float) cartesianPosSteps[X_AXIS], (float) cartesianPosSteps[Y_AXIS], (float) cartesianPosSteps[Z_AXIS],
+							theta1, theta2, theta3);
+	if (success != -1) {
+		deltaPosSteps[X_AXIS] = long (theta1 * XSTEPS_PER_DEGREE ); /* convert angles to steps */
+		deltaPosSteps[Y_AXIS] = long (theta2 * YSTEPS_PER_DEGREE ); /* convert angles to steps */ 
+		deltaPosSteps[Z_AXIS] = long (theta3 * ZSTEPS_PER_DEGREE ); /* convert angles to steps */ 
+	}
+	return success;
 }
 
 #endif
